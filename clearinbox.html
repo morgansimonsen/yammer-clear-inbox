@@ -1,110 +1,119 @@
-<script type="text/javascript" data-app-id="xxxxxxxxxxxxx"
-        src="https://assets.yammer.com/assets/platform_js_sdk.js"></script>
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+
 <script type="text/javascript"
         src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
 
-<link href="https://c64.assets-yammer.com/assets/application-1c98c68e33b84c76a20d8b772a79d328.css" media="screen, projection, print" rel="stylesheet" type="text/css" />
+<!-- get from github -->
+<script type="text/javascript" src="json2.js"></script>
 
+<script type="text/javascript" data-app-id="add your client_id here"
+        src="https://c64.assets-yammer.com/assets/platform_js_sdk.js"></script>
+
+<link href="https://c64.assets-yammer.com/assets/application-1c98c68e33b84c76a20d8b772a79d328.css" media="screen, projection, print" rel="stylesheet" type="text/css" />
 
 <script type="text/javascript">
 
-    var count = 1;
+    //var count = 1;
 
     function getUnreadCount() {
 
-        yam.getLoginStatus( function(response) {
+        var url = "https://api.yammer.com/api/v1/messages/inbox.json";
 
-          if (response.authResponse) {
-                var url = "https://api.yammer.com/api/v1/messages/inbox.json"; 
+        yam.request(
+        { url: url
+          , method: "GET"
+          , data: {
 
-                yam.request(
-                  { url: url
-                  , method: "GET"
-                  , data: {
-
-                  }
-                  , success: function (json) {
-                            $('#columns').empty();
-                            $('#columns').append("<div>Unread Count: "+ json.meta.unseen_thread_count +"</div>");
-                            $('#columns').append('<div><a href="#" onclick="clearMessages()">Clear</a></div>');                  }
-                  , error: function (msg) { }
-                  }
-                );
-            } else {
-                yam.login( function (response) {
-                   //nothing
-                });
-            }
+          }
+          , success: function (json) {
+                $('#yammer-login').empty();
+                $('#yammer-login').append('You are logged in!');
+                $('#columns').empty();
+                $('#columns').append('<div>Unread Messages Count: ' + json.meta.unseen_thread_count + '</div>');
+                $('#columns').append('<div><a href="#" onclick="clearMessages()">Reset Unread Messages</a></div>');                  }
+          , error: function (msg) {
+             alert("Error: Make sure you add your url to Javascript Origins");
+          }
         });
     }
 
 
     function clearMessages(p) {
+        var count = 1;
 
-          yam.getLoginStatus( function(response) {
+        var url = "https://api.yammer.com/api/v1/messages/inbox.json"; //joined
 
-          if (response.authResponse) {
-                var url = "https://api.yammer.com/api/v1/messages/inbox.json"; //joined
+        yam.request(
+        { url: url
+          , method: "GET"
+          , data: {
+                 page: p
+          }
+          , success: function (json) {
 
-                yam.request(
-                  { url: url
-                  , method: "GET"
-                  , data: {
-                         page: p
-                  }
-                  , success: function (json) {
-                      $.each(json.meta.unseen_message_count_by_thread, function(index, element) {
-                            if (element != 0) {
-                                $('#columns').append("<div>"+ count++ + ". " + index + " " + element +" clearing....</div>");
-                                readMessage(index);
-                            }
-                      });
-                  }
-                  , error: function (msg) { }
-                  }
-                );
-            } else {
-                yam.login( function (response) {
-                   //nothing
-                });
-            }
+              $('#columns').append("<br><div>Debug Info</div>");
 
+              $.each(json.meta.unseen_message_count_by_thread, function(index, element) {
+
+                    if (element != 0) {
+                        $('#columns').append("<div>"+ count++ + ". " + index + " " + element +" clearing....</div>");
+                        readMessage(index);
+                    }
+                    else {
+                        $('#columns').append("<div>"+ count++ + ". " + index + " " + element +" read....</div>");
+                    }
+              });
+          }
+          , error: function (msg) { }
         });
+
     }
 
     function readMessage(threadId) {
-            var url = "https://api.yammer.com/api/v1/messages/last_seen_in_thread.json";
+        var url = "https://api.yammer.com/api/v1/messages/last_seen_in_thread.json";
 
-            yam.request(
-              { url: url
-              , method: "GET"
-              , data: {
-                    thread_id: threadId
-              }
-              , success: function (ret) {
-
-              }
-              , error: function (msg) { }
-              }
-            );
+        yam.request(
+        { url: url
+          , method: "GET"
+          , data: {
+                thread_id: threadId
+          }
+          , success: function (ret) {
+          }
+          , error: function (msg) { }
+        });
     }
-
-
 </script>
 
 
+<body>
+
 <div class="header-cell" id="masthead-container">
-    <h1>Clear Out Your Yammer Inbox</h1>
+    <h1>Reset Your Yammer Inbox</h1>
 </div>
 
-<body onload="getUnreadCount()">
+<span id="yammer-login"></span>
+<script>
+$(function(){
+    yam.connect.loginButton('#yammer-login', function (resp) {
+        if (resp.authResponse) {
+            //$('#yammer-login').append('You are logged in!');
+            getUnreadCount();  //you can't tell that you are truly connected until you make an API call
+        }
+    });
+    });
+</script>
 
 <div id="wrapper">
     <div id="columns">
-        checking...
-        <!-- this is where the data gets loaded -->
+
     </div>
 
 </div>
 
 </body>
+</html>
