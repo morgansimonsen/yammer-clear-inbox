@@ -3,131 +3,119 @@
 
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
+    <title>ResetInbox</title>
 
-<script type="text/javascript" data-app-id="vpQTIuKzLcr6pBeBeL3g"
-        src="https://assets.yammer.com/assets/platform_js_sdk.js"></script>
-<script type="text/javascript"
-        src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" data-app-id="zkoF8jIlCEdrqno9PCP3w"
+            src="https://assets.yammer.com/assets/platform_js_sdk.js"></script>
+    <script type="text/javascript"
+            src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <link href="https://c64.assets-yammer.com/assets/application-1c98c68e33b84c76a20d8b772a79d328.css" media="screen, projection, print" rel="stylesheet" type="text/css" />
 
-<link href="https://c64.assets-yammer.com/assets/application-1c98c68e33b84c76a20d8b772a79d328.css" media="screen, projection, print" rel="stylesheet" type="text/css" />
-
-<style type="text/css">
-    #masthead-container {
-        background-color: #000000;
-        color:white;
-        padding:10px;
-    }
-</style>
-
-<script type="text/javascript">
-
-    var count = 1;
-
-    function getUnreadCount() {
-
-        yam.getLoginStatus( function(response) {
-
-          if (response.authResponse) {
-                var url = "https://api.yammer.com/api/v1/messages/inbox.json"; //joined
-
-                yam.request(
-                  { url: url
-                  , method: "GET"
-                  , data: {
-
-                  }
-                  , success: function (json) {
-                            $('#columns').empty();
-                            $('#columns').append("<div>Unread Count: "+ json.meta.unseen_thread_count +"</div>");
-                            $('#columns').append('<div><a href="#" onclick="clearMessages()">Clear</a></div>');                  }
-                  , error: function (msg) { }
-                  }
-                );
-            } else {
-                yam.login( function (response) {
-                   //nothing
-                });
-            }
-        });
-    }
-
-
-    function clearMessages(p) {
-
-          yam.getLoginStatus( function(response) {
-
-          if (response.authResponse) {
-                var url = "https://api.yammer.com/api/v1/messages/inbox.json"; //joined
-
-                yam.request(
-                  { url: url
-                  , method: "GET"
-                  , data: {
-                         page: p
-                  }
-                  , success: function (json) {
-                      $.each(json.meta.unseen_message_count_by_thread, function(index, element) {
-                            if (element != 0) {
-                                $('#columns').append("<div>"+ count++ + ". " + index + " " + element +" clearing....</div>");
-                                readMessage(index);
-                            }
-                      });
-                  }
-                  , error: function (msg) { }
-                  }
-                );
-            } else {
-                yam.login( function (response) {
-                   //nothing
-                });
-            }
-
-        });
-    }
-
-
-    function getURLParameter(sParam){
-        var sPageURL = window.location.search.substring(1);
-        var sURLVariables = sPageURL.split('&');
-        for (var i = 0; i < sURLVariables.length; i++)
-        {
-            var sParameterName = sURLVariables[i].split('=');
-            if (sParameterName[0] == sParam)
-            {
-                return sParameterName[1];
-            }
+    <style type="text/css">
+        #masthead-container {
+            background-color: #0072C6;
+            padding:10px;
+            color: white;
+            height:44px;
         }
-    }
+        .indent {
+            padding:10px;
+        }
+    </style>
 
-    function readMessage(threadId) {
-            var url = "https://api.yammer.com/api/v1/messages/last_seen_in_thread.json";
+    <script type="text/javascript">
 
-            yam.request(
-              { url: url
-              , method: "GET"
-              , data: {
-                    thread_id: threadId
-              }
-              , success: function (ret) {
+        var count = 1;
 
-              }
-              , error: function (msg) { }
-              }
-            );
-    }
+        function getUnreadCount() {
+            $('#status').empty();
+            $('#status').append("<div>[Checking Inbox...]</div>");
 
-    function login() {
-           yam.connect.loginButton('#yammer-login', function (resp) {
-               if (resp.authResponse) {
-                    document.getElementById('yammer-login').innerHTML = 'Welcome to Yammer!';
-                    $('#columns').empty();
-                    $('#columns').append("Checking...");
-                    getUnreadCount();
-               }
+            yam.getLoginStatus( function(response) {
+                if (response.authResponse) {
+                    var url = "https://api.yammer.com/api/v1/messages/inbox.json";
+                    yam.platform.request(
+                    { url: url
+                        , method: "GET"
+                        , data: {
+                        }
+                        , success: function (json) {
+                            $('#columns').empty();
+                            $('#status').empty();
+
+                            if (json.meta.unseen_thread_count == 0) {
+                                $('#columns').append("<div>Your Inbox is Empty!  <a href='#' onclick='getUnreadCount()'>Check Again</a></div>");
+                            }
+                            else {
+                                $('#columns').append("<div>Unread Count: "+ json.meta.unseen_thread_count +"</div>");
+                                $('#columns').append('<div><a href="#" onclick="resetMessages()">Reset</a></div>');
+                            }
+                        }
+                        , error: function (msg) { }
+                    });
+                } else {
+                    yam.login( function (response) {
+
+                    });
+                }
             });
-     }
+        }
 
+        function resetMessages(p) {
+            yam.getLoginStatus( function(response) {
+                $('#status').empty();
+                $('#status').append("<div>[Resetting...]</div>");
+                if (response.authResponse) {
+                    var url = "https://api.yammer.com/api/v1/messages/inbox.json";
+                    count = 1;
+                    yam.platform.request(
+                    { url: url
+                        , method: "GET"
+                        , data: {
+                            page: p
+                        }
+                        , success: function (json) {
+                            $.each(json.meta.unseen_message_count_by_thread, function(index, element) {
+                                if (element != 0) {
+                                    $('#columns').append("<div>"+ count++ + ". " + index + " " + element +" cleared....</div>");
+                                    clearMessage(index);
+                                }
+                            });
+                            getUnreadCount();
+                        }
+                        , error: function (msg) { }
+                    });
+                } else {
+                        yam.login( function (response) {
+                        //nothing
+                    });
+                }
+            });
+        }
+
+        function clearMessage(threadId) {
+            var url = "https://api.yammer.com/api/v1/messages/last_seen_in_thread.json";
+                yam.platform.request(
+                { url: url
+                    , method: "GET"
+                    , data: {
+                    thread_id: threadId
+                    }
+                    , success: function (ret) {
+                    }
+                    , error: function (msg) { }
+                });
+        }
+
+        function login() {
+            yam.connect.loginButton('#yammer-login', function (resp) {
+                if (resp.authResponse) {
+                    document.getElementById('yammer-login').innerHTML = '[You are logged in!]';
+                    $('#columns').empty();
+                    getUnreadCount();
+                }
+            });
+        }
 
 </script>
 </head>
@@ -135,16 +123,15 @@
 <body onload="login()">
 
 <div class="header-cell" id="masthead-container">
-    <h1>Clear Out Your Yammer Inbox</h1>
+    <h1>Reset Yammer Inbox</h1>
 </div>
 
-<div style="padding:10px"><span id="yammer-login"></span></div>
-
+<div><span id="yammer-login"></span></div>
 <div id="wrapper">
-    <div style="padding:10px" id="columns">
+    <div id="status"></div>
+    <div class="indent" id="columns">
         <!-- this is where the data gets loaded -->
     </div>
-
 </div>
 
 </body>
